@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FeelStream</title>
+    <style>
+        /* Common styles */
+        @import url('https://fonts.googleapis.com/css?family=Space%20Grotesk:700|Space%20Grotesk:400');
+
+        :root {
+            --m: 3rem;
+            --red: #FF6565;
+            --pink: #FF64F9;
+            --purple: #6B5FFF;
+            --blue: #4D8AFF;
+            --green: #5BFF89;
+            --yellow: #FFEE55;
+            --orange: #FF6D1B;
+        }
+
+        body {
+            background-color: #000000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #F3F3F3; /* Default text color */
+        }
+
+        /* Button for first page */
+        button {
+            border: calc(0.08 * var(--m)) solid transparent;
+            position: relative;
+            color: #F3F3F3;
+            font-family: 'Space Grotesk';
+            font-size: var(--m);
+            border-radius: calc(0.7 * var(--m));
+            padding: calc(0.5 * var(--m)) calc(1 * var(--m));
+            display: flex;
+            justify-content: center;
+            cursor: pointer;
+            background: linear-gradient(#000000, #000000), linear-gradient(#000000 50%, rgba(18, 18, 19, 0.6) 80%, rgba(18, 18, 19, 0)), linear-gradient(90deg, var(--orange), var(--yellow), var(--green), var(--blue), var(--purple), var(--pink), var(--red));
+            background-origin: border-box;
+            background-clip: padding-box, border-box, border-box;
+            background-size: 200%;
+            animation: animate 5s infinite linear;
+        }
+
+        button::before {
+            content: '';
+            background: linear-gradient(90deg, var(--orange), var(--yellow), var(--green), var(--blue), var(--purple), var(--pink), var(--red));
+            height: 10%;
+            width: 15%;
+            position: absolute;
+            bottom: -20%;
+            z-index: -5;
+            background-size: 200%;
+            animation: animate 5s infinite linear;
+            filter: blur(calc(0.8 * var(--m)));
+        }
+
+        button:hover, button:hover::before {
+            animation: animate 0.5s infinite linear;
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(255, 235, 130, 0.5);
+            background-size: 250%;
+        }
+
+        @keyframes animate {
+            0% { background-position: 0 }
+            100% { background-position: 200% }
+        }
+
+        /* Second page styles */
+        .container {
+            background-color: #1a1a1a;
+            width: 800px;  /* Increase width */
+            height: 600px; /* Increase height */
+            border-radius: 10px;
+            padding: 20px; /* Adjust padding */
+            text-align: center;
+            margin-top: 20px;
+            overflow-y: auto; /* Allow scrolling if content overflows */
+        }
+
+        h1 {
+            color: #F3F3F3;
+            font-size: 3rem;
+            font-family: 'Space Grotesk';
+            margin: 20px 0; /* Spacing above and below */
+        }
+
+        #emotion {
+            color: #FF6347;
+            font-size: 1.5rem; /* Slightly smaller font for emotion text */
+            margin: 20px 0; /* Spacing above and below */
+        }
+
+        #songs {
+            color: #F3F3F3;
+            font-size: 1.5rem;
+            margin-top: 20px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #333;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 1.2rem;  /* Adjust the font size to fit more songs */
+        }
+
+        /* Add styles for scrolling inside the container */
+        .container::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .container::-webkit-scrollbar-thumb {
+            background-color: #444;
+            border-radius: 10px;
+        }
+
+        .container::-webkit-scrollbar-track {
+            background-color: #1a1a1a;
+        }
+    </style>
+</head>
+<body>
+    <!-- First Page: FeelStream Button -->
+    <div class="button-page">
+        <button onclick="showSecondPage()">FeelStream</button>
+    </div>
+
+    <!-- Second Page: Emotion Detection and Song Recommendation -->
+    <div class="container" id="second-page" style="display:none;">
+        <h1>FeelStream</h1> <!-- Headline for second page -->
+        <div id="emotion">Detected Emotion: <span id="detected-emotion">None</span></div> <!-- Emotion Detection text -->
+        <div id="songs">
+            <h2>Recommended Songs</h2>
+            <ul id="song-list">
+                <li>No songs to recommend yet...</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let lastEmotion = "None"; // Variable to store the last detected emotion
+        let lastRecommendedSongs = []; // Variable to store last recommended songs
+        let emotionDetectionInterval; // To store the interval for emotion detection
+
+        // Function to fetch emotion data immediately upon page load
+        function fetchInitialEmotionData() {
+            fetch('/get_emotion')
+                .then(response => response.json())
+                .then(data => {
+                    // Check if the emotion detection was successful
+                    if (data.emotion && data.recommended_songs) {
+                        lastEmotion = data.emotion; // Update last detected emotion
+                        lastRecommendedSongs = data.recommended_songs; // Update last recommended songs
+                    }
+
+                    // Update the detected emotion in the page
+                    document.getElementById('detected-emotion').innerText = lastEmotion;
+
+                    // Get the song list container
+                    let songList = document.getElementById('song-list');
+                    songList.innerHTML = '';
+
+                    // If there are songs for the detected emotion, show them
+                    if (lastRecommendedSongs.length > 0) {
+                        lastRecommendedSongs.forEach(song => {
+                            let listItem = document.createElement('li');
+                            listItem.innerText = song;
+                            songList.appendChild(listItem);
+                        });
+                    } else {
+                        // If no songs are available, show a placeholder
+                        let noSongs = document.createElement('li');
+                        noSongs.innerText = "No songs to recommend yet...";
+                        songList.appendChild(noSongs);
+                    }
+                })
+                .catch(error => {
+                    console.log(error);
+                    // If fetch fails, use the last known values
+                    document.getElementById('detected-emotion').innerText = lastEmotion;
+                    let songList = document.getElementById('song-list');
+                    songList.innerHTML = '';
+
+                    if (lastRecommendedSongs.length > 0) {
+                        lastRecommendedSongs.forEach(song => {
+                            let listItem = document.createElement('li');
+                            listItem.innerText = song;
+                            songList.appendChild(listItem);
+                        });
+                    } else {
+                        let noSongs = document.createElement('li');
+                        noSongs.innerText = "No songs to recommend yet...";
+                        songList.appendChild(noSongs);
+                    }
+                });
+        }
+
+        // Function to start emotion detection on second page
+        function startEmotionDetection() {
+            fetchInitialEmotionData(); // Initial fetch
+            emotionDetectionInterval = setInterval(fetchInitialEmotionData, 5000); // Fetch emotion data every 5 seconds
+        }
+
+        // Show the second page (home page) after button click
+        function showSecondPage() {
+            document.querySelector(".button-page").style.display = "none"; // Hide the first page
+            document.querySelector("#second-page").style.display = "block"; // Show the second page
+            startEmotionDetection(); // Start emotion detection when on the second page
+        }
+    </script>
+</body>
+</html>
