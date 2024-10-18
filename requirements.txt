@@ -1,0 +1,3 @@
+Flask==2.0.3
+emotion-recognition==1.0.0  # Replace this with the actual package name/version if this is a custom module
+gunicorn==20.1.0
